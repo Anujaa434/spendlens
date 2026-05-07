@@ -1,7 +1,7 @@
 # DevLog — SpendLens
 
 ## Day 1 — 2026-05-06
-**Hours worked:** 3
+**Hours worked:** 2
 
 **What I did:** Set up Next.js project with TypeScript, Tailwind CSS, and shadcn/ui. Created GitHub repo and pushed first commit. Built the spend input form with tool selector (Cursor, Copilot, Claude, ChatGPT, Gemini, Windsurf), plan dropdown, seats, monthly spend input, team size, and use case. Added localStorage persistence so form survives page reloads.
 
