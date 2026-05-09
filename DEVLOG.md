@@ -37,10 +37,28 @@
 ## Day 4 — 2026-05-09
 **Hours worked:** 4
 
-**What I did:** Set up Supabase database, built lead capture form, implemented shareable audit URLs, added Anthropic API for AI summary.
+**What I did:** Set up Supabase database, built lead capture form, implemented shareable 
+audit URLs, added Anthropic API for AI summary with fallback templated response.
 
 **What I learned:** 
+- How to connect a Next.js app to Supabase using environment variables and the 
+  `@supabase/supabase-js` client
+- How to write a Next.js API route that handles POST requests, calls an external API, 
+  and saves data to a database
+- That `FormData` is a reserved browser built-in — naming a custom type the same thing 
+  causes a silent conflict that breaks the whole component
+- How honeypot fields work as a simple bot-detection technique in lead capture forms
+- How to test API endpoints manually using PowerShell's `Invoke-WebRequest`
 
 **Blockers / what I'm stuck on:** 
+- `SpendForm` component still throwing runtime errors — likely a module resolution or 
+  import conflict that persists across file replacements
+- Need to fully debug and resolve the component error first thing tomorrow before 
+  building new features
 
-**Plan for tomorrow:** Add Resend email, Open Graph tags, polish UI, deploy to Vercel.
+**Plan for tomorrow:** 
+1. Fix remaining SpendForm runtime errors
+2. Add Resend email integration
+3. Add Open Graph tags for shareable audit URLs
+4. Polish UI
+5. Deploy to Vercel
