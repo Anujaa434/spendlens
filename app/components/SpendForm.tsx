@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { runAudit, AuditSummary, FormData } from "@/lib/auditEngine";
+import { runAudit, AuditSummary, AuditFormData } from "@/lib/auditEngine";
 
 const TOOLS = [
   { id: "cursor", name: "Cursor", plans: ["Hobby", "Pro", "Business", "Enterprise"] },
@@ -45,6 +45,11 @@ const defaultState: FormState = {
 export default function SpendForm() {
   const [form, setForm] = useState<FormState>(defaultState);
   const [audit, setAudit] = useState<AuditSummary | null>(null);
+  const [auditId, setAuditId] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [leadSaved, setLeadSaved] = useState(false);
+  const [leadForm, setLeadForm] = useState({ email: "", companyName: "", role: "", website: "" });
 
   useEffect(() => {
     const saved = localStorage.getItem("spendlens-form");
@@ -73,12 +78,46 @@ export default function SpendForm() {
     setForm({ ...form, tools: updated.length ? updated : [defaultEntry()] });
   };
 
-  const handleSubmit = () => {
-    const result = runAudit(form as FormData);
+  const handleSubmit = async () => {
+    setLoading(true);
+    const result = runAudit(form as AuditFormData);
     setAudit(result);
+
+    try {
+      const res = await fetch("/api/audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tools: form.tools,
+          teamSize: form.teamSize,
+          useCase: form.useCase,
+          results: result.results,
+          totalMonthlySavings: result.totalMonthlySavings,
+          totalAnnualSavings: result.totalAnnualSavings,
+        }),
+      });
+      const data = await res.json();
+      setAuditId(data.auditId);
+      setAiSummary(data.aiSummary);
+    } catch (err) {
+      console.error("API error:", err);
+      setAiSummary("Based on your audit, we found optimization opportunities in your AI tool stack. Review the breakdown above for specific recommendations.");
+    }
+
+    setLoading(false);
     setTimeout(() => {
       document.getElementById("audit-results")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
+  };
+
+  const handleLeadSubmit = async () => {
+    if (!auditId || !leadForm.email) return;
+    await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ auditId, ...leadForm }),
+    });
+    setLeadSaved(true);
   };
 
   return (
@@ -165,45 +204,44 @@ export default function SpendForm() {
             value={form.useCase}
             onChange={(e) => setForm({ ...form, useCase: e.target.value })}
           >
-            {USE_CASES.map((u) => <option key={u} value={u}>{u}</option>)}
+            {USE_CASES.map((u) => (
+              <option key={u} value={u}>{u}</option>
+            ))}
           </select>
         </div>
       </div>
 
-      <Button className="w-full" size="lg" onClick={handleSubmit}>
-        Run My Audit →
+      <Button className="w-full" size="lg" onClick={handleSubmit} disabled={loading}>
+        {loading ? "Analyzing..." : "Run My Audit →"}
       </Button>
 
-      {/* RESULTS */}
       {audit && (
         <div id="audit-results" className="mt-10 space-y-6">
-          {/* Hero */}
           <div className="rounded-2xl bg-card border p-8 text-center space-y-2">
             <p className="text-sm text-muted-foreground uppercase tracking-wide">Total Potential Savings</p>
             <p className="text-5xl font-bold">${audit.totalMonthlySavings}/mo</p>
             <p className="text-muted-foreground">${audit.totalAnnualSavings.toLocaleString()} saved per year</p>
             {audit.isAlreadyOptimal && (
-              <p className="text-green-600 font-medium mt-2">✅ You're spending well. No major optimizations found.</p>
+              <p className="text-green-600 font-medium mt-2">You are spending well. No major optimizations found.</p>
             )}
             {audit.isHighSavings && (
               <div className="mt-4 p-4 bg-primary/10 rounded-xl">
                 <p className="font-semibold">You could save over $500/mo — Credex can help you capture even more.</p>
-                <a href="https://credex.rocks" target="_blank" className="text-primary underline text-sm">Book a free Credex consultation →</a>
+                <a href="https://credex.rocks" target="_blank" rel="noreferrer" className="text-primary underline text-sm">
+                  Book a free Credex consultation →
+                </a>
               </div>
             )}
           </div>
 
-          {/* Per tool breakdown */}
           {audit.results.map((r) => (
             <div key={r.toolId} className="border rounded-xl p-5 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">{r.toolName}</span>
                 <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                  r.status === "overspending"
-                    ? "bg-red-100 text-red-700"
-                    : r.status === "switch"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-green-100 text-green-700"
+                  r.status === "overspending" ? "bg-red-100 text-red-700"
+                  : r.status === "switch" ? "bg-yellow-100 text-yellow-700"
+                  : "bg-green-100 text-green-700"
                 }`}>
                   {r.status === "overspending" ? "Overspending" : r.status === "switch" ? "Better option" : "Optimal"}
                 </span>
@@ -218,6 +256,68 @@ export default function SpendForm() {
               )}
             </div>
           ))}
+
+          {aiSummary && (
+            <div className="border rounded-xl p-5 bg-card space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">AI Summary</p>
+              <p className="text-sm leading-relaxed">{aiSummary}</p>
+            </div>
+          )}
+
+          {auditId && (
+            <div className="border rounded-xl p-5 bg-card space-y-2">
+              <p className="text-sm font-semibold">Share your audit</p>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                  value={`${window.location.origin}/audit/${auditId}`}
+                />
+                <button
+                  className="px-3 py-2 border rounded-md text-sm hover:bg-muted"
+                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/audit/${auditId}`)}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!leadSaved && (
+            <div className="border rounded-xl p-5 bg-card space-y-4">
+              <p className="font-semibold">Save your report</p>
+              <p className="text-sm text-muted-foreground">Get notified when new optimizations apply to your stack.</p>
+              <input type="text" name="website" className="hidden" value={leadForm.website} onChange={(e) => setLeadForm({ ...leadForm, website: e.target.value })} />
+              <input
+                type="email"
+                placeholder="your@email.com"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                value={leadForm.email}
+                onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Company name (optional)"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                value={leadForm.companyName}
+                onChange={(e) => setLeadForm({ ...leadForm, companyName: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Your role (optional)"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                value={leadForm.role}
+                onChange={(e) => setLeadForm({ ...leadForm, role: e.target.value })}
+              />
+              <Button className="w-full" onClick={handleLeadSubmit}>Save my report →</Button>
+            </div>
+          )}
+
+          {leadSaved && (
+            <div className="border rounded-xl p-5 bg-green-50 text-green-700 text-sm font-medium">
+              Report saved! We will notify you when new optimizations apply to your stack.
+            </div>
+          )}
         </div>
       )}
     </div>
