@@ -33,3 +33,14 @@
 **Blockers / what I'm stuck on:** N/A
 
 **Plan for tomorrow:** Set up Supabase, build lead capture form, implement shareable audit URLs. Also set up Anthropic API key and Resend account.
+
+## Day 4 — 2026-05-09
+**Hours worked:** 4
+
+**What I did:** Set up Supabase database, built lead capture form, implemented shareable audit URLs, added Anthropic API for AI summary.
+
+**What I learned:** 
+
+**Blockers / what I'm stuck on:** 
+
+**Plan for tomorrow:** Add Resend email, Open Graph tags, polish UI, deploy to Vercel.
