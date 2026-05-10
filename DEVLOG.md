@@ -35,7 +35,7 @@
 **Plan for tomorrow:** Set up Supabase, build lead capture form, implement shareable audit URLs. Also set up Anthropic API key and Resend account.
 
 ## Day 4 — 2026-05-09
-**Hours worked:** 4
+**Hours worked:** 2
 
 **What I did:** Set up Supabase database, built lead capture form, implemented shareable 
 audit URLs, added Anthropic API for AI summary with fallback templated response.
@@ -58,6 +58,21 @@ audit URLs, added Anthropic API for AI summary with fallback templated response.
 
 **Plan for tomorrow:** 
 1. Fix remaining SpendForm runtime errors
+2. Add Resend email integration
+3. Add Open Graph tags for shareable audit URLs
+4. Polish UI
+5. Deploy to Vercel
+
+## Day 3 — 2026-05-08
+**Hours worked:** 0
+
+**What I did:** I’m studying for an exam that is tomorrow.
+
+**What I learned:** N/A
+
+**Blockers / what I'm stuck on:** N/A
+
+**Plan for tomorrow:** 1. Fix remaining SpendForm runtime errors
 2. Add Resend email integration
 3. Add Open Graph tags for shareable audit URLs
 4. Polish UI
